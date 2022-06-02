@@ -1,4 +1,0 @@
-config TEST_DOUBLE
-    bool "calculator : enable test double."
-    help
-        This enables TEST_DOUBLE feature of the calculator component.

@@ -1,8 +1,8 @@
-set(srcs "calculator.c")
+set(srcs "dht20.c")
 set(dirs ".")
 
  if(CONFIG_TEST_DOUBLE)
-     list(APPEND srcs "./mocks/mock_math.c")
+     list(APPEND srcs "./mocks/dht20_mock.c")
      list(APPEND dirs "./mocks")
  endif()
 

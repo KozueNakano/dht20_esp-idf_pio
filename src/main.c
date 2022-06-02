@@ -13,7 +13,6 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 static const char *TAG = "testDouble";
-#include "calculator.h"
 
 /* Can use project configuration menu (idf.py menuconfig) to choose the GPIO to blink,
    or you can edit the following line and set a number here.
@@ -32,7 +31,6 @@ void app_main()
     /* Set the GPIO as a push/pull output */
     gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
     while(1) {
-    printf("2.0^4.0 = %lf",calc_exp(2.0,4.0));
         /* Blink off (output low) */
 	printf("Turning off the LED\n");
         gpio_set_level(BLINK_GPIO, 0);
