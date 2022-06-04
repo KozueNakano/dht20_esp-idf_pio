@@ -98,21 +98,85 @@ void test_function_i2c_master_init(void){
 
 //cmdLinkGenerateTest
 
-int tmp_cmd = 1;
-i2c_cmd_handle_t tmp_cmd_handle = &tmp_cmd;
+i2c_cmd_handle_t cmd_handle = NULL;
+int test_cmd_qty = 20;
 
 void test_i2c_driver_mock_i2c_cmd_link_create(void)
 {
-  set_i2c_cmd_link_create(tmp_cmd_handle);
-  TEST_ASSERT_EQUAL(tmp_cmd_handle, i2c_cmd_link_create());
+  set_i2c_cmd_link_create(test_cmd_qty);
+  TEST_ASSERT_EQUAL(test_cmd_qty , spy_i2c_cmd_link_create());
+  cmd_handle = i2c_cmd_link_create();
+  TEST_ASSERT_NOT_NULL(cmd_handle);
+
 }
 
-void test_i2c_driver_mock_i2c_master_start(void){
+void test_i2c_driver_mock_i2c_master_start(void)
+{
   set_return_i2c_master_start(ESP_OK);
-  TEST_ASSERT_EQUAL(ESP_OK, i2c_master_start(tmp_cmd_handle));
+  TEST_ASSERT_EQUAL(ESP_OK, i2c_master_start(cmd_handle));
   i2c_cmd_handle_t spy_cmd_handle;
   spy_i2c_master_start(&spy_cmd_handle);
-  TEST_ASSERT_EQUAL(tmp_cmd_handle,spy_cmd_handle);
+  TEST_ASSERT_EQUAL(cmd_handle,spy_cmd_handle);
+}
+
+
+void test_i2c_driver_mock_i2c_master_write_byte(void)
+{
+  set_return_i2c_master_write_byte(ESP_OK);
+  esp_err_t err =  i2c_master_write_byte(/*cmd_handle*/cmd_handle, /*data*/1, /*ack_en:EN*/0x01);
+  TEST_ASSERT_EQUAL(ESP_OK,err);
+}
+
+const uint8_t data[3] = {3,4,5};
+void test_i2c_driver_mock_i2c_master_write(void)
+{
+  set_return_i2c_master_write(ESP_OK);
+  esp_err_t err = i2c_master_write(/*cmd_handle*/cmd_handle,/* *data*/data,/*data_len*/3,/*ack_en*/0x01);
+  TEST_ASSERT_EQUAL(ESP_OK,err);
+}
+
+void test_i2c_driver_mock_i2c_master_stop(void)
+{
+  set_i2c_master_stop(ESP_OK);
+  esp_err_t err = i2c_master_stop(cmd_handle);
+  TEST_ASSERT_EQUAL(ESP_OK,err);
+}
+
+void test_i2c_driver_cmd_link(void){
+
+struct cmd *cmd_link_tmp = cmd_handle;
+int index = 0;
+TEST_ASSERT_EQUAL(cmd_handle , cmd_link_tmp[index].cmd_handle);
+TEST_ASSERT_EQUAL(START , cmd_link_tmp[index].type); 
+
+index = 1;
+TEST_ASSERT_EQUAL(cmd_handle , cmd_link_tmp[index].cmd_handle);
+TEST_ASSERT_EQUAL(1 , cmd_link_tmp[index].data);
+TEST_ASSERT_EQUAL(0x01 , cmd_link_tmp[index].ack_en);
+TEST_ASSERT_EQUAL(WRITE , cmd_link_tmp[index].type);
+
+index = 2;
+TEST_ASSERT_EQUAL(cmd_handle , cmd_link_tmp[index].cmd_handle);
+TEST_ASSERT_EQUAL(3 , cmd_link_tmp[index].data);
+TEST_ASSERT_EQUAL(0x01 , cmd_link_tmp[index].ack_en);
+TEST_ASSERT_EQUAL(WRITE , cmd_link_tmp[index].type);
+
+index = 3;
+TEST_ASSERT_EQUAL(cmd_handle , cmd_link_tmp[index].cmd_handle);
+TEST_ASSERT_EQUAL(4 , cmd_link_tmp[index].data);
+TEST_ASSERT_EQUAL(0x01 , cmd_link_tmp[index].ack_en);
+TEST_ASSERT_EQUAL(WRITE , cmd_link_tmp[index].type);
+
+index = 4;
+TEST_ASSERT_EQUAL(cmd_handle , cmd_link_tmp[index].cmd_handle);
+TEST_ASSERT_EQUAL(5 , cmd_link_tmp[index].data);
+TEST_ASSERT_EQUAL(0x01 , cmd_link_tmp[index].ack_en);
+TEST_ASSERT_EQUAL(WRITE , cmd_link_tmp[index].type);
+
+index = 5;
+TEST_ASSERT_EQUAL(cmd_handle , cmd_link_tmp[index].cmd_handle);
+TEST_ASSERT_EQUAL(STOP , cmd_link_tmp[index].type);
+
 }
 
 void app_main()
@@ -124,7 +188,11 @@ void app_main()
   RUN_TEST(test_function_i2c_master_init);
   RUN_TEST(test_i2c_driver_mock_i2c_cmd_link_create);
   RUN_TEST(test_i2c_driver_mock_i2c_master_start);
+  RUN_TEST(test_i2c_driver_mock_i2c_master_write_byte);
+  RUN_TEST(test_i2c_driver_mock_i2c_master_write);
+  RUN_TEST(test_i2c_driver_mock_i2c_master_stop);
 
+  RUN_TEST(test_i2c_driver_cmd_link);
   UNITY_END();
 
 }
