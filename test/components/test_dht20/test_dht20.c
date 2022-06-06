@@ -135,12 +135,39 @@ void test_i2c_driver_mock_i2c_master_write(void)
   TEST_ASSERT_EQUAL(ESP_OK,err);
 }
 
+void test_i2c_driver_mock_i2c_master_read_byte(void)
+{
+  uint8_t test_rd_data = 39;
+  set_return_i2c_master_read_byte(ESP_OK,test_rd_data);
+  uint8_t return_rd_data = 0;
+  esp_err_t err =  i2c_master_read_byte(cmd_handle, &return_rd_data, /*ACK_VAL0x00 or NACK_VAL0x01*/0x00);
+  TEST_ASSERT_EQUAL(ESP_OK,err);
+  TEST_ASSERT_EQUAL(test_rd_data,return_rd_data);
+}
+
+void test_i2c_driver_mock_i2c_master_read()
+{
+  uint8_t test_read_data[3] = {0,1,2};
+  size_t test_read_data_len = 3;
+  set_return_i2c_master_read(ESP_OK,test_read_data,test_read_data_len);
+  uint8_t read_data[3] = {0};
+  size_t read_data_len = 3;
+  esp_err_t err = i2c_master_read(cmd_handle, read_data, read_data_len, /*ACK_VAL0x00 or NACK_VAL0x01*/0x01);
+  TEST_ASSERT_EQUAL(ESP_OK,err);
+  for (size_t i = 0; i < read_data_len; i++)
+  {
+    TEST_ASSERT_EQUAL(test_read_data[i],read_data[i]);
+  }
+  
+}
+
 void test_i2c_driver_mock_i2c_master_stop(void)
 {
   set_i2c_master_stop(ESP_OK);
   esp_err_t err = i2c_master_stop(cmd_handle);
   TEST_ASSERT_EQUAL(ESP_OK,err);
 }
+
 
 void test_i2c_driver_cmd_link(void){
 
@@ -175,9 +202,51 @@ TEST_ASSERT_EQUAL(WRITE , cmd_link_tmp[index].type);
 
 index = 5;
 TEST_ASSERT_EQUAL(cmd_handle , cmd_link_tmp[index].cmd_handle);
+TEST_ASSERT_EQUAL(0x00 , cmd_link_tmp[index].ack);
+TEST_ASSERT_EQUAL(READ , cmd_link_tmp[index].type);
+
+index = 6;
+TEST_ASSERT_EQUAL(cmd_handle , cmd_link_tmp[index].cmd_handle);
+TEST_ASSERT_EQUAL(0x01 , cmd_link_tmp[index].ack);
+TEST_ASSERT_EQUAL(READ , cmd_link_tmp[index].type);
+
+index = 7;
+TEST_ASSERT_EQUAL(cmd_handle , cmd_link_tmp[index].cmd_handle);
+TEST_ASSERT_EQUAL(0x01 , cmd_link_tmp[index].ack);
+TEST_ASSERT_EQUAL(READ , cmd_link_tmp[index].type);
+
+index = 8;
+TEST_ASSERT_EQUAL(cmd_handle , cmd_link_tmp[index].cmd_handle);
+TEST_ASSERT_EQUAL(0x01 , cmd_link_tmp[index].ack);
+TEST_ASSERT_EQUAL(READ , cmd_link_tmp[index].type);
+
+index = 9;
+TEST_ASSERT_EQUAL(cmd_handle , cmd_link_tmp[index].cmd_handle);
 TEST_ASSERT_EQUAL(STOP , cmd_link_tmp[index].type);
 
 }
+
+void test_i2c_driver_i2c_master_cmd_begin(void)
+{
+  /*
+  *     - ESP_OK Success
+  *     - ESP_ERR_INVALID_ARG Parameter error
+  *     - ESP_FAIL Sending command error, slave doesn't ACK the transfer.
+  *     - ESP_ERR_INVALID_STATE I2C driver not installed or not in master mode.
+  *     - ESP_ERR_TIMEOUT Operation timeout because the bus is busy.
+  */
+  set_i2c_master_cmd_begin(ESP_OK);
+  TEST_ASSERT_EQUAL(ESP_OK,i2c_master_cmd_begin(i2c_master_port, cmd_handle, 1000 / portTICK_RATE_MS));
+  set_i2c_master_cmd_begin(ESP_ERR_INVALID_ARG);
+  TEST_ASSERT_EQUAL(ESP_ERR_INVALID_ARG,i2c_master_cmd_begin(i2c_master_port, cmd_handle, 1000 / portTICK_RATE_MS));
+}
+
+void test_i2c_driver_i2c_cmd_link_delete(void)
+{
+  i2c_cmd_link_delete(cmd_handle);
+}
+
+
 
 void app_main()
 {
@@ -190,9 +259,15 @@ void app_main()
   RUN_TEST(test_i2c_driver_mock_i2c_master_start);
   RUN_TEST(test_i2c_driver_mock_i2c_master_write_byte);
   RUN_TEST(test_i2c_driver_mock_i2c_master_write);
+  RUN_TEST(test_i2c_driver_mock_i2c_master_read_byte);
+  RUN_TEST(test_i2c_driver_mock_i2c_master_read);
+
   RUN_TEST(test_i2c_driver_mock_i2c_master_stop);
 
   RUN_TEST(test_i2c_driver_cmd_link);
+
+  RUN_TEST(test_i2c_driver_i2c_master_cmd_begin);
+  RUN_TEST(test_i2c_driver_i2c_cmd_link_delete);
   UNITY_END();
 
 }

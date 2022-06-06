@@ -144,9 +144,71 @@ esp_err_t i2c_master_stop(i2c_cmd_handle_t cmd_handle)
     return return_i2c_master_stop;
 }
 
-esp_err_t i2c_master_read(i2c_cmd_handle_t cmd_handle, uint8_t *data, size_t data_len, i2c_ack_type_t ack)
+uint8_t return_rd_data = 0;
+esp_err_t return_i2c_master_read_byte = ESP_OK;
+void set_return_i2c_master_read_byte(esp_err_t err,uint8_t test_rd_data)
 {
-    //todo
-    return ESP_OK;
+    return_rd_data = test_rd_data;
+    return_i2c_master_read_byte = err;
 }
 
+esp_err_t i2c_master_read_byte(i2c_cmd_handle_t cmd_handle, uint8_t *data, i2c_ack_type_t ack)
+{
+    struct cmd *cmd_link_tmp = cmd_handle;
+    cmd_link_tmp[cmd_link_counter].cmd_handle = cmd_handle;
+    cmd_link_tmp[cmd_link_counter].type = READ;
+    cmd_link_tmp[cmd_link_counter].ack = ack;
+    cmd_link_counter++;
+
+    *data = return_rd_data;
+
+    return return_i2c_master_read_byte;
+}
+
+uint8_t *return_rd_data_array = NULL;
+size_t return_rd_data_array_len = 0;
+esp_err_t return_i2c_master_read = ESP_OK;
+
+void set_return_i2c_master_read(esp_err_t err,uint8_t *test_rd_data,size_t test_rd_data_len)
+{
+    return_i2c_master_read = err;
+    return_rd_data_array = test_rd_data;
+    return_rd_data_array_len = test_rd_data_len;
+    return;
+}
+
+esp_err_t i2c_master_read(i2c_cmd_handle_t cmd_handle, uint8_t *data, size_t data_len, i2c_ack_type_t ack)
+{
+
+    struct cmd *cmd_link_tmp = cmd_handle;
+    for (size_t i = 0; i < data_len; i++)
+    {
+        int index = cmd_link_counter+(int)i;
+        cmd_link_tmp[index].cmd_handle = cmd_handle;
+        cmd_link_tmp[index].type = READ;
+        cmd_link_tmp[index].ack = ack;
+
+        data[i] = return_rd_data_array[i];
+    }
+    cmd_link_counter += data_len;
+
+    return return_i2c_master_read;
+}
+
+
+static esp_err_t return_i2c_master_cmd_begin = ESP_OK;
+void set_i2c_master_cmd_begin(esp_err_t err)
+{
+    return_i2c_master_cmd_begin = err;
+    return;
+}
+
+esp_err_t i2c_master_cmd_begin(i2c_port_t i2c_num, i2c_cmd_handle_t cmd_handle, TickType_t ticks_to_wait)
+{
+    return return_i2c_master_cmd_begin;
+}
+
+void i2c_cmd_link_delete(i2c_cmd_handle_t cmd_handle)
+{
+    free(cmd_handle);
+}

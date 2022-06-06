@@ -8,12 +8,13 @@ extern "C"
     #include <esp_err.h>
     #include "driver/i2c.h"
 
-    enum cmd_type {WRITE,START,STOP};
+    enum cmd_type {WRITE,START,STOP,READ};
     struct cmd {
     i2c_cmd_handle_t cmd_handle;
     uint8_t data;
     bool ack_en;
-    enum cmd_type type; 
+    enum cmd_type type;
+    i2c_ack_type_t ack;
     };
 
     void spy_i2c_param_config(i2c_port_t*,i2c_config_t*);
@@ -26,6 +27,9 @@ extern "C"
     void set_return_i2c_master_write_byte(esp_err_t err);
     void set_return_i2c_master_write(esp_err_t err);
     void set_i2c_master_stop(esp_err_t err);
+    void set_i2c_master_cmd_begin(esp_err_t err);
+    void set_return_i2c_master_read_byte(esp_err_t err,uint8_t test_rd_data);
+    void set_return_i2c_master_read(esp_err_t err,uint8_t *test_rd_data,size_t test_rd_data_len);
 
 #ifdef __cplusplus
 }
